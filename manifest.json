@@ -1,0 +1,16 @@
+{
+  "short_name": "ChopsCounter",
+  "name": "Chops Counter Sales Tracker",
+  "icons": [
+    {
+      "src": "https://flaticon.com",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#1e1b4b",
+  "theme_color": "#1e1b4b",
+  "display": "standalone",
+  "orientation": "portrait"
+}

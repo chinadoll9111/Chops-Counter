@@ -37,12 +37,28 @@
             margin-bottom: 8px;
         }
 
-        .sidebar nav {
-            display: flex;
-            width: 100%;
-            gap: 4px;
-            justify-content: space-between;
+                /* 📱 COLLAPSIBLE WRAPPING HEADER TAB BAR PATCH */
+        @media (max-width: 768px) {
+            .sidebar nav {
+                display: flex !important;
+                width: 100% !important;
+                gap: 6px !important;
+                /* THE FIX: Allows tabs to break into two clean rows if the screen is narrow */
+                flex-wrap: wrap !important; 
+                justify-content: center !important;
+            }
+
+            .nav-btn {
+                margin-bottom: 0 !important;
+                padding: 10px 8px !important;
+                font-size: 0.82rem !important;
+                text-align: center !important;
+                /* THE FIX: Shared widths so buttons adapt dynamically to any size phone glass */
+                flex: 1 1 calc(50% - 6px) !important; 
+                white-space: nowrap !important;
+            }
         }
+
 
         .nav-btn {
             flex: 1;

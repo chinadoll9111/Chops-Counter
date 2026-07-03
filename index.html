@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chops Counter - Sales Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+</head>
+
+
+<body>
+
+    <!-- 1. SIDEBAR CONTAINER NAVIGATION -->
+    <div class="sidebar">
+        <div>
+            <div class="sidebar-brand">🍡 Chops Counter</div>
+            <nav>
+                <button onclick="switchView('input')" id="nav-input" class="nav-btn active">📝 Daily Input</button>
+                <button onclick="switchView('history')" id="nav-history" class="nav-btn">📜 History Log</button>
+                <button onclick="switchView('weekly')" id="nav-weekly" class="nav-btn">📊 Weekly Reports</button>
+                <button onclick="switchView('expenses')" id="nav-expenses" class="nav-btn">💸 Weekly Expenses</button>
+            </nav>
+        </div>
+        <div style="font-size: 0.75rem; color: #a5b4fc; text-align: center;">
+            Offline Dashboard v1.3
+        </div>
+                <!-- DATA BACKUP LAYER CONTROLS -->
+        <div style="border-top: 1px solid #312e81; padding: 12px; margin-top: 20px; padding-top: 12px;">
+            <p style="font-size: 0.65rem; color: #a5b4fc; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; text-align: center;">🛡️ Data Safety Vault</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                <button onclick="exportBusinessDataBackup()" style="background: #16a34a; color: white; border: none; padding: 6px; font-size: 0.75rem; font-weight: 700; border-radius: 4px; cursor: pointer;">📤 Backup</button>
+                <button onclick="importBusinessDataBackup()" style="background: #4f46e5; color: white; border: none; padding: 6px; font-size: 0.75rem; font-weight: 700; border-radius: 4px; cursor: pointer;">📥 Restore</button>
+            </div>
+            <!-- Invisible input helper to read files -->
+            <input type="file" id="backup-file-handler" accept=".json" style="display: none;" onchange="processRestoreFile(event)">
+        </div>
+
+    </div>
+
+    <!-- 2. MAIN DASHBOARD CONTENT SCREENS FRAMEWORK -->
+    <div class="main-content">
+        
+        <!-- ==================== VIEW 1: DAILY INPUT WORKSPACE ==================== -->
+        <div id="view-input" class="view-grid">
+            
+            <!-- Left Side Operations Forms -->
+            <div class="workspace-left">
+                <!-- Date Bar Card -->
+                <div class="card flex-row-bar">
+                    <span style="font-weight: 700; color: #4b5563;">Select Current Date:</span>
+                    <input type="date" id="working-date" style="width: auto;">
+                </div>
+
+                <!-- Input Form Card -->
+                <div class="card">
+                    <div class="card-title">Log New Item Sold</div>
+                    <form id="sale-form" onsubmit="addSaleRow(event)" class="form-grid">
+                        <div>
+                            <label>Product</label>
+                            <select id="form-product" required></select>
+                        </div>
+                        <div>
+                            <label>Quantity</label>
+                            <input type="number" id="form-qty" min="1" value="1" required>
+                        </div>
+                        <div>
+                            <label>Payment Method</label>
+                            <select id="form-payment">
+                                <option value="Cash">💵 Cash</option>
+                                <option value="Transfer">📱 Transfer</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-submit">Add Row</button>
+                    </form>
+                </div>
+
+                <!-- Table Logging Card Layout -->
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <div style="padding: 15px; background: #f3f4f6; font-weight: 700; border-bottom: 1px solid #e5e7eb;">Today's Current Sheet Log</div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th style="text-align: center;">Qty</th>
+                                    <th style="text-align: right;">Cash Amount</th>
+                                    <th style="text-align: right;">Transfer Amount</th>
+                                    <th style="text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Transport Bar Card -->
+                <div class="card flex-row-bar">
+                    <div style="display: flex; align-items: center; gap: 8px; font-weight: 700;">
+                        <span>🛺</span> Minus Transport Fare (₦):
+                    </div>
+                    <input type="number" id="input-transport" value="0" oninput="calculateEverything()" style="width: 140px; text-align: right; font-weight: bold; color: #dc2626;">
+                </div>
+            </div>
+
+            <!-- Right Side Daily Calculations Sticky Panel Widget -->
+            <div class="card engine-card">
+                <div class="engine-title">
+                    <span>⚡ Live Calculations</span>
+                </div>
+                
+                <div class="split-row">
+                    <div class="pill-box pill-snack">
+                        <label style="color: #c2410c;">Snacks Total</label>
+                        <div id="calc-snacks" class="pill-value">₦0</div>
+                    </div>
+                    <div class="pill-box pill-drink">
+                        <label style="color: #0369a1;">Drinks Total</label>
+                        <div id="calc-drinks" class="pill-value">₦0</div>
+                    </div>
+                </div>
+
+                <div class="calc-line"><span>Gross Sales:</span><span id="calc-gross" style="font-weight:700;">₦0</span></div>
+                <div class="calc-line"><span>Transport Fare:</span><span id="calc-trans" style="color:#dc2626; font-weight:700;">-₦0</span></div>
+                <div class="net-line flex-row-bar"><span>Net Revenue:</span><span id="calc-net">₦0</span></div>
+
+                <div class="final-box box-profit">
+                    <label style="color: #15803d; font-weight: 800;">Pure Take-Home Profit</label>
+                    <div id="calc-profit" class="big-profit-val">₦0</div>
+                </div>
+                
+                <div class="final-box box-cost">
+                    <label style="color: #4b5563; font-weight: 800;">Working Capital (Restock Cost)</label>
+                    <div id="calc-cost" class="big-cost-val">₦0</div>
+                </div>
+
+                <button onclick="saveDayToStorage()" class="btn-save-day">💾 Save End-of-Day Record</button>
+            </div>
+        </div>
+
+        <!-- ==================== VIEW 2: HISTORY LOG ARCHIVE ==================== -->
+        <div id="view-history" class="history-layout hidden">
+            <h2 style="font-size: 1.6rem; font-weight: 800; color: #1e1b4b; margin-bottom: 20px;">📜 Archived Business Book Entries</h2>
+            <div id="history-container"></div>
+        </div>
+
+        <!-- ==================== VIEW 3: WEEKLY REPORTS ARCHIVE ==================== -->
+        <div id="view-weekly" class="history-layout hidden">
+            <h2 style="font-size: 1.6rem; font-weight: 800; color: #1e1b4b; margin-bottom: 20px;">📊 Consolidated Weekly Statements</h2>
+            <div id="weekly-container"></div>
+        </div>
+
+        <!-- ==================== VIEW 4: WEEKLY INGREDIENTS EXPENSES ==================== -->
+        <div id="view-expenses" class="history-layout hidden" style="max-width: 900px;">
+            <h2 style="font-size: 1.6rem; font-weight: 800; color: #1e1b4b; margin-bottom: 5px;">💸 Weekly Raw Materials Expenses</h2>
+            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 20px;">Log ingredient purchases to deduct from all-time business totals.</p>
+            
+            <!-- Global Business Baseline Summary Banners -->
+            <div class="card" style="background: linear-gradient(135deg, #1e1b4b, #312e81); color: white; display: flex; justify-content: space-around; text-align: center; padding: 15px; margin-bottom: 20px;">
+                <div>
+                    <p style="font-size: 0.75rem; text-transform: uppercase; color: #c7d2fe; font-weight: 700;">All-Time Global Cost</p>
+                    <span id="grand-base-cost" style="font-size: 1.5rem; font-weight: 900; color: #f43f5e;">₦0</span>
+                </div>
+                <div style="border-left: 1px dashed #4338ca;"></div>
+                <div>
+                    <p style="font-size: 0.75rem; text-transform: uppercase; color: #c7d2fe; font-weight: 700;">All-Time Global Profit</p>
+                    <span id="grand-base-profit" style="font-size: 1.5rem; font-weight: 900; color: #10b981;">₦0</span>
+                </div>
+            </div>
+
+            <!-- Ingredients Forms Grid Split -->
+            <div class="view-grid" style="grid-template-columns: 1.5fr 1fr; gap: 20px; align-items: start;">
+                <div class="workspace-left">
+                    <div class="card">
+                        <div class="card-title" style="color: #4f46e5; border-bottom: 1px solid #eee; padding-bottom: 8px;">1. Select Week Duration Block</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+                            <div>
+                                <label>Start Date (Mon)</label>
+                                <input type="date" id="expense-start-date" onchange="runGlobalExpensesEngine()">
+                            </div>
+                            <div>
+                                <label>End Date (Fri)</label>
+                                <input type="date" id="expense-end-date" onchange="runGlobalExpensesEngine()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="padding: 0; overflow: hidden;">
+                        <div style="padding: 12px 15px; background: #f9fafb; font-weight: 700; font-size: 0.9rem; color: #374151; border-bottom: 1px solid #e5e7eb;">2. Ingredient Inventory Pricing</div>
+                        <div style="max-height: 380px; overflow-y: auto; padding: 15px;" id="ingredients-form-container">
+                            <!-- Dynamic inputs loaded via javascript trigger arrays -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Balance Reconciliation Engine Sticky Sidebar -->
+                <div class="card engine-card" style="position: sticky; top: 10px; border-color: #fbcfe8; background: #fffdfd;">
+                                        <div class="engine-title" style="color: #9d174d; border-color: #fbcfe8; margin-bottom: 10px;">
+                        <span>📊 Global Balance Tweak</span>
+                        <span id="expense-active-week-label" style="font-size: 0.75rem; color: #6b7280; font-weight: normal; display: block; margin-top: 2px;">No week selected</span>
+                    </div>
+                    <div class="calc-line"><span>Standard Material Inputs:</span><span id="exp-total-ingredients" style="color:#d946ef; font-weight:700;">₦0</span></div>
+                    <div class="calc-line"><span style="color:#be185d; font-weight:600;">🛢️ Oil Split Deduction (1/2):</span><span id="exp-oil-split" style="color:#be185d; font-weight:700;">-₦0</span></div>
+                    
+                    <div style="border-top: 2px dashed #fbcfe8; margin: 12px 0;"></div>
+                    <div class="final-box" style="background: #fdf2f8; border: 1px solid #fbcfe8; margin-bottom: 10px; padding: 10px;">
+                        <label style="color: #9d174d; font-weight: 800; font-size: 0.7rem;">📉 Adjusted Grand Cost Total</label>
+                        <div id="exp-adjusted-cost" style="font-size: 1.4rem; font-weight: 900; color: #be185d;">₦0</div>
+                    </div>
+                    <div class="final-box" style="background: #f0fdf4; border: 1px solid #bbf7d0; margin-bottom: 12px; padding: 10px;">
+                        <label style="color: #16a34a; font-weight: 800; font-size: 0.7rem;">📈 Adjusted Grand Profit Total</label>
+                        <div id="exp-adjusted-profit" style="font-size: 1.4rem; font-weight: 900; color: #16a34a;">₦0</div>
+                    </div>
+                    <button onclick="saveWeeklyExpenses()" id="btn-save-expenses" class="btn-save-day" style="background: #db2777; padding: 12px;">💾 Save Week Expenses</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: #1e1b4b; margin-bottom: 12px;">📜 Saved Weekly Expenses Logs</h3>
+                <div id="weekly-expenses-archive-container"></div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
+
